@@ -1,0 +1,182 @@
+{
+  "0x8d2dff6be1a41645": {
+    "name": "pattern",
+    "fields": {
+      "1": {
+        "name": "id",
+        "type": "text",
+        "retired": false
+      },
+      "2": {
+        "name": "name",
+        "type": "text",
+        "retired": false
+      },
+      "3": {
+        "name": "role",
+        "type": "text",
+        "retired": false
+      },
+      "4": {
+        "name": "apg",
+        "type": "text",
+        "retired": false
+      },
+      "5": {
+        "name": "pos",
+        "type": "int",
+        "retired": false
+      }
+    }
+  },
+  "0xd74394fca38707f5": {
+    "name": "keystroke",
+    "fields": {
+      "1": {
+        "name": "id",
+        "type": "text",
+        "retired": false
+      },
+      "2": {
+        "name": "pattern_id",
+        "type": "text",
+        "retired": false
+      },
+      "3": {
+        "name": "key",
+        "type": "text",
+        "retired": false
+      },
+      "4": {
+        "name": "when",
+        "type": "text",
+        "retired": false
+      },
+      "5": {
+        "name": "does",
+        "type": "text",
+        "retired": false
+      },
+      "6": {
+        "name": "reading",
+        "type": "text",
+        "retired": false
+      },
+      "7": {
+        "name": "departs",
+        "type": "text",
+        "retired": false
+      },
+      "8": {
+        "name": "pos",
+        "type": "int",
+        "retired": false
+      }
+    }
+  },
+  "0x85bafc442228e975": {
+    "name": "attribute",
+    "fields": {
+      "1": {
+        "name": "id",
+        "type": "text",
+        "retired": false
+      },
+      "2": {
+        "name": "pattern_id",
+        "type": "text",
+        "retired": false
+      },
+      "3": {
+        "name": "name",
+        "type": "text",
+        "retired": false
+      },
+      "4": {
+        "name": "on",
+        "type": "text",
+        "retired": false
+      },
+      "5": {
+        "name": "does",
+        "type": "text",
+        "retired": false
+      },
+      "6": {
+        "name": "probe",
+        "type": "text",
+        "retired": false
+      },
+      "7": {
+        "name": "pos",
+        "type": "int",
+        "retired": false
+      }
+    }
+  },
+  "0xdf5e45e2e4a68817": {
+    "name": "option",
+    "fields": {
+      "1": {
+        "name": "id",
+        "type": "text",
+        "retired": false
+      },
+      "2": {
+        "name": "widget",
+        "type": "text",
+        "retired": false
+      },
+      "3": {
+        "name": "label",
+        "type": "text",
+        "retired": false
+      },
+      "4": {
+        "name": "body",
+        "type": "text",
+        "retired": false
+      },
+      "5": {
+        "name": "open",
+        "type": "text",
+        "retired": false
+      },
+      "6": {
+        "name": "pos",
+        "type": "int",
+        "retired": false
+      }
+    }
+  },
+  "0xab920ec0f2a12cce": {
+    "name": "choice",
+    "fields": {
+      "1": {
+        "name": "id",
+        "type": "text",
+        "retired": false
+      },
+      "2": {
+        "name": "value",
+        "type": "text",
+        "retired": false
+      }
+    }
+  },
+  "0x943e3eb3016a38e6": {
+    "name": "flag",
+    "fields": {
+      "1": {
+        "name": "id",
+        "type": "text",
+        "retired": false
+      },
+      "2": {
+        "name": "on",
+        "type": "text",
+        "retired": false
+      }
+    }
+  }
+}

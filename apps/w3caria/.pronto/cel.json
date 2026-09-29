@@ -1,0 +1,10 @@
+{
+  "this >= 1": {"expr":{"callExpr":{"function":"_>=_","args":[{"identExpr":{"name":"this"}},{"constExpr":{"int64Value":"1"}}]}}},
+  "this in ['no', 'stops', 'declined']": {"expr":{"callExpr":{"function":"@in","args":[{"identExpr":{"name":"this"}},{"listExpr":{"elements":[{"constExpr":{"stringValue":"no"}},{"constExpr":{"stringValue":"stops"}},{"constExpr":{"stringValue":"declined"}}]}}]}}},
+  "this in ['true', 'false']": {"expr":{"callExpr":{"function":"@in","args":[{"identExpr":{"name":"this"}},{"listExpr":{"elements":[{"constExpr":{"stringValue":"true"}},{"constExpr":{"stringValue":"false"}}]}}]}}},
+  "this.size() <= 24": {"expr":{"callExpr":{"function":"_<=_","args":[{"callExpr":{"target":{"identExpr":{"name":"this"}},"function":"size"}},{"constExpr":{"int64Value":"24"}}]}}},
+  "this.size() <= 40": {"expr":{"callExpr":{"function":"_<=_","args":[{"callExpr":{"target":{"identExpr":{"name":"this"}},"function":"size"}},{"constExpr":{"int64Value":"40"}}]}}},
+  "this.size() <= 400": {"expr":{"callExpr":{"function":"_<=_","args":[{"callExpr":{"target":{"identExpr":{"name":"this"}},"function":"size"}},{"constExpr":{"int64Value":"400"}}]}}},
+  "this.size() > 0": {"expr":{"callExpr":{"function":"_>_","args":[{"callExpr":{"target":{"identExpr":{"name":"this"}},"function":"size"}},{"constExpr":{"int64Value":"0"}}]}}},
+  "this.startsWith('https://')": {"expr":{"callExpr":{"target":{"identExpr":{"name":"this"}},"function":"startsWith","args":[{"constExpr":{"stringValue":"https://"}}]}}}
+}

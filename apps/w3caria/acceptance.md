@@ -1,0 +1,23 @@
+# Acceptance
+
+- [ ] The gallery lists every implemented pattern with its ARIA role, its live widget, and its published keystroke table. {#accept-gallery-lists-patterns}
+- [ ] Every pattern's keystroke table is the guide's own wording, and a row this implementation reads differently says so. {#accept-table-is-verbatim}
+- [ ] Every pattern's roles, states and properties table is on the page beside the widget that must satisfy it. {#accept-aria-table-shown}
+- [ ] The whole gallery can be operated with the keyboard alone, with no pointer at any point. {#accept-keyboard-only}
+- [ ] A widget is one stop in the page's tab sequence, whatever it holds. {#accept-one-tab-stop}
+- [ ] Tabbing back to a widget returns to the member that was current, not to the first one. {#accept-tabstop-remembers}
+- [ ] The disclosure button toggles its content with Enter and with Space, and says which it is with aria-expanded. {#accept-disclosure}
+- [ ] The switch toggles with Space, and carries role switch with aria-checked. {#accept-switch}
+- [ ] Arrow keys move between tabs and activate the one they land on; Home and End reach the ends. {#accept-tabs-arrows}
+- [ ] Exactly one tab carries aria-selected true, and its panel is the one on screen. {#accept-tabs-selected}
+- [ ] Arrow keys in the radio group move and check in one gesture, and Space checks the button that has focus. {#accept-radio-arrows}
+- [ ] Exactly one radio button carries aria-checked true. {#accept-radio-one-checked}
+- [ ] Arrow keys in the listbox move and select; Home and End reach the ends. {#accept-listbox-arrows}
+- [ ] Exactly one option carries aria-selected true. {#accept-listbox-one-selected}
+- [ ] Arrow keys move between accordion headers without opening anything; Enter and Space open the header they are on. {#accept-accordion-keys}
+- [ ] More than one accordion section can be open at once, and each header says which it is with aria-expanded. {#accept-accordion-multiple}
+- [ ] Where the guide specifies wrapping at the ends and this implementation stops instead, the row is marked as a departure. {#accept-departures-marked}
+- [ ] Every element the roles table names is present on the page carrying the attribute the table names. {#accept-aria-present}
+- [ ] Opening a pattern's contract shows its keystrokes and its attributes in full, on their own page. {#accept-contract-page}
+- [ ] Every screen renders correctly in both light and dark appearance. {#accept-dark-twin}
+- [ ] Nothing on the page is smaller than a thumb, and every animation collapses under reduced motion. {#accept-touch-and-motion}

@@ -1,0 +1,46 @@
+<section class="screen" data-screen="contract">
+
+  <p class="back"><a data-route="gallery">‹ All patterns</a></p>
+
+  <div class="head" data-live="pattern" data-filter="id=eq.{param.id}">
+    <template data-item>
+      <header class="masthead">
+        <h1 class="title" data-text="{name}"></h1>
+        <p class="sub">Role <code data-text="{role}"></code> ·
+          <a href="{apg}">the guide's page for this pattern</a></p>
+      </header>
+    </template>
+  </div>
+
+  <table class="keys">
+    <caption>Keyboard interaction</caption>
+    <thead><tr><th scope="col">Key</th><th scope="col">When</th><th scope="col">The guide says</th><th scope="col">Here</th></tr></thead>
+    <tbody data-live="keystroke" data-filter="pattern_id=eq.{param.id}" data-order="pos.asc"
+           data-empty="No keystrokes recorded for this pattern.">
+      <template data-item>
+        <tr data-departs="{departs}">
+          <th scope="row"><kbd data-text="{key}"></kbd></th>
+          <td data-text="{when}"></td>
+          <td data-text="{does}"></td>
+          <td class="reading" data-text="{reading}"></td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+
+  <table class="attrs">
+    <caption>Roles, states and properties</caption>
+    <thead><tr><th scope="col">Role or attribute</th><th scope="col">On</th><th scope="col">The guide says</th></tr></thead>
+    <tbody data-live="attribute" data-filter="pattern_id=eq.{param.id}" data-order="pos.asc"
+           data-empty="No attributes recorded for this pattern.">
+      <template data-item>
+        <tr>
+          <th scope="row"><code data-text="{name}"></code></th>
+          <td><code data-text="{on}"></code></td>
+          <td data-text="{does}"></td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+
+</section>

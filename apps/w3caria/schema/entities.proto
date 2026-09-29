@@ -1,0 +1,54 @@
+syntax = "proto3";
+package pronto.entities;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+
+message Attribute {
+  optional string id = 1 [json_name = "id"];
+  optional string pattern_id = 2 [json_name = "pattern_id"];
+  optional string name = 3 [json_name = "name"];
+  optional string on = 4 [json_name = "on"];
+  optional string does = 5 [json_name = "does"];
+  optional string probe = 6 [json_name = "probe"];
+  optional int32 pos = 7 [json_name = "pos"];
+}
+
+message Choice {
+  optional string id = 1 [json_name = "id"];
+  optional string value = 2 [json_name = "value"];
+}
+
+message Flag {
+  optional string id = 1 [json_name = "id"];
+  optional string on = 2 [json_name = "on"];
+}
+
+message Keystroke {
+  optional string id = 1 [json_name = "id"];
+  optional string pattern_id = 2 [json_name = "pattern_id"];
+  optional string key = 3 [json_name = "key"];
+  optional string when = 4 [json_name = "when"];
+  optional string does = 5 [json_name = "does"];
+  optional string reading = 6 [json_name = "reading"];
+  optional string departs = 7 [json_name = "departs"];
+  optional int32 pos = 8 [json_name = "pos"];
+}
+
+message Option {
+  optional string id = 1 [json_name = "id"];
+  optional string widget = 2 [json_name = "widget"];
+  optional string label = 3 [json_name = "label"];
+  optional string body = 4 [json_name = "body"];
+  optional string open = 5 [json_name = "open"];
+  optional int32 pos = 6 [json_name = "pos"];
+}
+
+message Pattern {
+  optional string id = 1 [json_name = "id"];
+  optional string name = 2 [json_name = "name"];
+  optional string role = 3 [json_name = "role"];
+  optional string apg = 4 [json_name = "apg"];
+  optional int32 pos = 5 [json_name = "pos"];
+}

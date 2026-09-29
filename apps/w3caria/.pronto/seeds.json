@@ -1,0 +1,140 @@
+{
+  "pattern": [
+    {
+      "id": "pattern_0001",
+      "name": "Sample name 1",
+      "role": "seed_role_1",
+      "apg": "seed_apg_1",
+      "pos": 10
+    },
+    {
+      "id": "pattern_0002",
+      "name": "Sample name 2",
+      "role": "seed_role_2",
+      "apg": "seed_apg_2",
+      "pos": 20
+    },
+    {
+      "id": "pattern_0003",
+      "name": "Sample name 3",
+      "role": "seed_role_3",
+      "apg": "seed_apg_3",
+      "pos": 30
+    }
+  ],
+  "keystroke": [
+    {
+      "id": "keystroke_0001",
+      "pattern_id": "pattern_0002",
+      "key": "seed_key_1",
+      "when": "seed_when_1",
+      "does": "seed_does_1",
+      "reading": "seed_reading_1",
+      "departs": "no",
+      "pos": 10
+    },
+    {
+      "id": "keystroke_0002",
+      "pattern_id": "pattern_0001",
+      "key": "seed_key_2",
+      "when": "seed_when_2",
+      "does": "seed_does_2",
+      "reading": "seed_reading_2",
+      "departs": "stops",
+      "pos": 20
+    },
+    {
+      "id": "keystroke_0003",
+      "pattern_id": "pattern_0002",
+      "key": "seed_key_3",
+      "when": "seed_when_3",
+      "does": "seed_does_3",
+      "reading": "seed_reading_3",
+      "departs": "declined",
+      "pos": 30
+    }
+  ],
+  "attribute": [
+    {
+      "id": "attribute_0001",
+      "pattern_id": "pattern_0002",
+      "name": "Sample name 1",
+      "on": "seed_on_1",
+      "does": "seed_does_1",
+      "probe": "seed_probe_1",
+      "pos": 10
+    },
+    {
+      "id": "attribute_0002",
+      "pattern_id": "pattern_0001",
+      "name": "Sample name 2",
+      "on": "seed_on_2",
+      "does": "seed_does_2",
+      "probe": "seed_probe_2",
+      "pos": 20
+    },
+    {
+      "id": "attribute_0003",
+      "pattern_id": "pattern_0002",
+      "name": "Sample name 3",
+      "on": "seed_on_3",
+      "does": "seed_does_3",
+      "probe": "seed_probe_3",
+      "pos": 30
+    }
+  ],
+  "option": [
+    {
+      "id": "option_0001",
+      "widget": "seed_widget_1",
+      "label": "seed_label_1",
+      "body": "seed_body_1",
+      "open": "true",
+      "pos": 10
+    },
+    {
+      "id": "option_0002",
+      "widget": "seed_widget_2",
+      "label": "seed_label_2",
+      "body": "seed_body_2",
+      "open": "false",
+      "pos": 20
+    },
+    {
+      "id": "option_0003",
+      "widget": "seed_widget_3",
+      "label": "seed_label_3",
+      "body": "seed_body_3",
+      "open": "true",
+      "pos": 30
+    }
+  ],
+  "choice": [
+    {
+      "id": "choice_0001",
+      "value": "seed_value_1"
+    },
+    {
+      "id": "choice_0002",
+      "value": "seed_value_2"
+    },
+    {
+      "id": "choice_0003",
+      "value": "seed_value_3"
+    }
+  ],
+  "flag": [
+    {
+      "id": "flag_0001",
+      "on": "true"
+    },
+    {
+      "id": "flag_0002",
+      "on": "false"
+    },
+    {
+      "id": "flag_0003",
+      "on": "true"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+/* The specimen sheet's vocabulary: the well a widget sits in, the tables the
+   guide's text is set in, and the focus ring — which on a page about keyboard
+   operation is the design and not a detail. Unscoped on purpose: both screens
+   speak it. */
+
+.masthead { margin: 0 0 var(--sp-md); padding-bottom: var(--sp-sm);
+  border-bottom: 1px solid var(--border); }
+.masthead .title { margin: 0; font-size: var(--type-title); letter-spacing: -0.01em; }
+.masthead .sub { margin: 4px 0 0; color: var(--secondary); font-size: var(--type-body); }
+
+/* Never removed, anywhere, for any input modality. A suppressed focus ring on
+   this page is not a style choice. */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Inside the well you are operating something; outside it you are reading
+   about it. That boundary is the whole visual system. */
+.well { background: var(--surface-muted); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: var(--sp-md);
+  display: flex; flex-wrap: wrap; gap: var(--sp-sm); align-items: flex-start; }
+
+table { border-collapse: collapse; width: 100%; margin: var(--sp-md) 0 0;
+  font-size: var(--type-body); }
+caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
+th, td { border-top: 1px solid var(--border); padding: 8px 10px;
+  text-align: left; vertical-align: top; }
+thead th { border-top: 0; border-bottom: 1px solid var(--primary);
+  font-size: var(--type-caption); letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--secondary); }
+td.reading, .attrs td:last-child { color: var(--secondary); }
+
+kbd, code { font-family: ui-monospace, "SF Mono", monospace;
+  font-size: var(--type-code); line-height: var(--type-leading-code); }
+kbd { border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px;
+  background: var(--surface); white-space: nowrap; }
+
+/* A departure is a stated choice, so it is marked and not alarmed about. */
+tr[data-departs="stops"] th, tr[data-departs="declined"] th { color: var(--attention); }
+tr[data-departs="stops"] td.reading::before { content: "Departs — "; color: var(--attention); font-weight: 600; }
+tr[data-departs="declined"] td.reading::before { content: "Declined — "; color: var(--attention); font-weight: 600; }
+
+button { font: inherit; min-height: 36px; padding: 0 12px; cursor: pointer;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); color: var(--primary); }
+
+.empty { margin: var(--sp-sm) 0; color: var(--secondary); }

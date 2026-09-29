@@ -1,0 +1,84 @@
+@import url("shared/sheet.css");
+
+/* Every rule nested under the screen: the terminal injects a screen's
+   stylesheet into the head and it outlives the screen that brought it. */
+
+[data-screen="gallery"] {
+  display: grid;
+  gap: var(--sp-lg);
+  padding: var(--sp-md);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+[data-screen="gallery"] .toc ul { display: flex; flex-wrap: wrap; gap: var(--sp-sm);
+  margin: 0; padding: 0; list-style: none; }
+[data-screen="gallery"] .toc a { display: inline-flex; align-items: center;
+  min-height: 36px; padding: 0 10px;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  color: inherit; text-decoration: none; font-size: var(--type-body); }
+
+[data-screen="gallery"] .pattern { display: grid; gap: var(--sp-sm);
+  padding-top: var(--sp-md); border-top: 1px solid var(--border); }
+[data-screen="gallery"] .head h2 { margin: 0; font-size: var(--type-subtitle); }
+[data-screen="gallery"] .blurb { margin: 4px 0 0; color: var(--secondary); max-width: 60ch; }
+[data-screen="gallery"] .more { margin: 6px 0 0; font-size: var(--type-body-small); }
+
+/* The region lays nothing out; the well its item renders is the grid child. */
+[data-screen="gallery"] .rover { display: contents; }
+
+/* Disclosure and accordion panels appear without a transition: a height
+   animation is what makes an arrow key feel unresponsive, and it moves the
+   target while the reader is travelling to it. */
+[data-screen="gallery"] .disc-body,
+[data-screen="gallery"] .acc-panel { display: none; }
+[data-screen="gallery"] .disc-body[data-shown="true"],
+[data-screen="gallery"] .acc-panel[data-shown="true"] { display: block; }
+[data-screen="gallery"] .disc-body p { margin: var(--sp-sm) 0 0; max-width: 60ch; }
+[data-screen="gallery"] .well.acc { display: block; padding: 0; }
+[data-screen="gallery"] .acc-list { display: block; }
+[data-screen="gallery"] .section + .section { border-top: 1px solid var(--border); }
+[data-screen="gallery"] .acc-head { margin: 0; font-size: var(--type-heading); }
+[data-screen="gallery"] .acc-head button { width: 100%; text-align: left;
+  border: 0; border-radius: 0; background: none; }
+[data-screen="gallery"] .acc-panel { padding: 0 12px var(--sp-sm); max-width: 60ch; }
+
+/* The switch: a track and a knob, both driven by the one column aria-checked
+   already carries. */
+[data-screen="gallery"] .switch-row { display: inline-flex; align-items: center; gap: var(--sp-sm); }
+[data-screen="gallery"] [role="switch"] { padding: 4px 6px; }
+[data-screen="gallery"] .track { display: inline-block; width: 40px; height: 20px;
+  border: 1px solid var(--primary); border-radius: var(--r-full);
+  position: relative; vertical-align: middle; }
+[data-screen="gallery"] .knob { position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; border-radius: var(--r-full); background: var(--primary); }
+[data-screen="gallery"] [role="switch"][aria-checked="true"] .knob { left: auto; right: 2px; }
+[data-screen="gallery"] [role="switch"][aria-checked="true"] .track { background: var(--accent); border-color: var(--accent); }
+[data-screen="gallery"] [role="switch"][aria-checked="true"] .knob { background: var(--surface); }
+
+/* The members of a rover. A form wraps each so a pointer writes the same
+   column a key does; the form lays nothing out. */
+[data-screen="gallery"] .members { display: flex; flex-wrap: wrap; gap: 6px; }
+[data-screen="gallery"] .pick { display: contents; }
+[data-screen="gallery"] [role="tablist"] { gap: 0; }
+[data-screen="gallery"] [role="tab"] { border-radius: 0; border-bottom-color: transparent; }
+[data-screen="gallery"] [role="tab"][aria-selected="true"] { border-bottom: 2px solid var(--accent); font-weight: 600; }
+[data-screen="gallery"] [role="tabpanel"] { display: none; padding: var(--sp-sm) 0 0; max-width: 60ch; }
+[data-screen="gallery"] [role="tabpanel"][data-cur="true"] { display: block; }
+[data-screen="gallery"] .panels { flex-basis: 100%; }
+
+[data-screen="gallery"] [role="radiogroup"],
+[data-screen="gallery"] [role="listbox"] { flex-direction: column; align-items: stretch; }
+[data-screen="gallery"] [role="radio"],
+[data-screen="gallery"] [role="option"] { text-align: left; }
+[data-screen="gallery"] [role="radio"][aria-checked="true"],
+[data-screen="gallery"] [role="option"][aria-selected="true"] {
+  border-color: var(--accent); font-weight: 600; }
+/* The mark is text, not a colour: a state a reader can only see is a state
+   half the readers cannot. */
+[data-screen="gallery"] [role="radio"][aria-checked="true"]::before { content: "● "; }
+[data-screen="gallery"] [role="radio"][aria-checked="false"]::before { content: "○ "; }
+[data-screen="gallery"] [role="option"][aria-selected="true"]::before { content: "✓ "; }
+[data-screen="gallery"] [role="option"][aria-selected="false"]::before { content: "\00a0\00a0"; }
+
+[data-screen="gallery"] .gestures { display: none; }

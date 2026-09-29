@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Keyboard Contract — IR</title>
+<meta name="pronto-ir-version" content="alpha">
+<meta name="pronto-source" content="brief.md">
+<meta name="pronto-brief-sha256" content="e1e8d1a227b964a396dbf228fcce5a0d133ae8f7dc869d4d0b10f3e0d48ff9da">
+<meta name="pronto-generated" content="2026-09-04">
+<meta name="pronto-compiler" content="claude-opus-5">
+<meta name="pronto-team" content="studio (plugins/pronto/teams/studio.md)">
+<meta name="pronto-cluster" content="mecha (plugins/pronto/clusters/mecha.cue)">
+<meta name="pronto-terminal" content="omnishell (plugins/pronto/terminals/omnishell.cue)">
+<meta name="pronto-loop" content="sayt (plugins/pronto/loops/sayt.cue)">
+<meta name="pronto-build" content="bayt (plugins/pronto/builders/bayt.cue)">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"
+  integrity="sha384-rbtjAdnIQE/aQJGEgXrVUlMibdfTSa4PQju4HDhN3sR2PmaKFzhEafuePsl9H/9I"
+  crossorigin="anonymous"></script>
+<script>mermaid.initialize({startOnLoad: true, theme: "neutral"});</script>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 60rem; margin: 2rem auto; padding: 0 1rem;
+         font: 15px/1.55 -apple-system, "Segoe UI", sans-serif; }
+  h1, h2, h3 { line-height: 1.2; }
+  table { border-collapse: collapse; margin: 0.7rem 0; }
+  th, td { border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+           padding: 0.25rem 0.6rem; text-align: left; vertical-align: top; }
+  code.cel { font: 0.85em/1.4 ui-monospace, monospace; padding: 0.05em 0.3em;
+             border-radius: 4px;
+             background: color-mix(in srgb, currentColor 8%, transparent); }
+  figure { margin: 1rem 0; }
+  figure svg { border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+               border-radius: 6px; }
+  figcaption { font-size: 0.8rem; opacity: 0.75; max-width: 240px; }
+  .storyboard { display: flex; flex-wrap: wrap; gap: 1rem; }
+  p[data-kind="test"] { border-left: 3px solid color-mix(in srgb, currentColor 30%, transparent);
+                        padding-left: 0.8rem; }
+  section[data-kind="review"] { border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+                        border-radius: 6px; padding: 0.2rem 1rem; margin: 1rem 0; }
+  .verdict { font-weight: 700; }
+
+  /* Frame palette — Specimen Sheet. White ground, one tinted well, and the
+     focus ring in the accent, which is the only saturated thing on the page. */
+  .frames text { font: 10px ui-sans-serif, sans-serif; fill: #101010; }
+  .frames .h { font-size: 13px; font-weight: 700; }
+  .frames .big { font-size: 17px; font-weight: 700; }
+  .frames .sect { font-size: 8px; font-weight: 700; letter-spacing: 0.08em; fill: #5C5C57; }
+  .frames .muted { fill: #5C5C57; }
+  .frames .accent { fill: #0B4FA2; }
+  .frames .warn { fill: #8A5A00; }
+  .frames .mono { font: 9px ui-monospace, monospace; }
+  .frames .mid { text-anchor: middle; }
+  .frames rect.page { fill: #FFFFFF; }
+  .frames rect.well { fill: #F4F4F2; stroke: #D6D6D1; }
+  .frames rect.ctl { fill: #FFFFFF; stroke: #D6D6D1; }
+  .frames rect.on { fill: #FFFFFF; stroke: #0B4FA2; }
+  .frames rect.ring { fill: none; stroke: #0B4FA2; stroke-width: 2; }
+  .frames .rule { stroke: #D6D6D1; stroke-width: 1; }
+  .frames .heavy { stroke: #101010; stroke-width: 1; }
+  .frames .dark text { fill: #F0F0EE; }
+  .frames .dark .sect, .frames .dark .muted { fill: #A6A69F; }
+  .frames .dark .accent { fill: #7FB2F0; }
+  .frames .dark .warn { fill: #E0AE55; }
+  .frames .dark rect.page { fill: #0E0E0E; }
+  .frames .dark rect.well { fill: #1A1A19; stroke: #3A3A36; }
+  .frames .dark rect.ctl { fill: #0E0E0E; stroke: #3A3A36; }
+  .frames .dark rect.on { fill: #0E0E0E; stroke: #7FB2F0; }
+  .frames .dark rect.ring { stroke: #7FB2F0; }
+  .frames .dark .rule { stroke: #3A3A36; }
+  .frames .dark .heavy { stroke: #F0F0EE; }
+</style>
+</head>
+<body>
+
+<h1>The Keyboard Contract — engineering design</h1>
+<p>
+Compiled from <a href="brief.md">brief.md</a> (pinned above) by the
+<a href="../../plugins/pronto/teams/studio.md">studio</a> team, onto the mecha
+cluster, the omnishell terminal, the sayt loop and the bayt build graph.
+</p>
+
+<h2 id="overview">Overview</h2>
+<p>
+Six patterns from the ARIA Authoring Practices Guide, each implemented and each
+shown beside the two tables the guide publishes for it. Every entity takes the
+<code>tab</code> path (<a href="#decision-01">decision-01</a>): nothing is
+published, no migration is emitted, and the whole data plane is the terminal's
+in-memory collections. Four of the six tables are seeded and never written
+again — they are the guide's text, checked in.
+</p>
+<p>
+The load-bearing idea is that <strong>the specification is data, and coverage
+of it is the check</strong>. A published keyboard table is not prose about the
+widget; it is a finite list of rows, each of which the app can be driven
+through. <a href="#Keystroke">Keystroke</a> holds those rows verbatim, plus one
+column of this implementation's own reading; the contract suite drives each
+one, records the id it drove, and fails if a row was never driven
+(<a href="#decision-03">decision-03</a>). The same move is made twice: every
+<a href="#Attribute">Attribute</a> row names an element, and the aria suite
+asserts that element is on the page carrying what the row says.
+</p>
+<p>
+Three of the six patterns are one shape — a set of members, one of them
+current, a roving tab stop on the current one — so they are one app-local
+component (<a href="#decision-05">decision-05</a>). What the other three cost
+in markup is the interesting half of this compile: two of them are a single
+machine over a boolean and nothing else, and the sixth is that machine three
+times over.
+</p>
+
+<div class="mermaid">
+graph TD
+  Pattern["Pattern (tab)"] --> gallery
+  Keystroke["Keystroke (tab)"] --> gallery
+  Attribute["Attribute (tab)"] --> gallery
+  Option["Option (tab)"] --> gallery
+  Choice["Choice (tab)"] --> gallery
+  Flag["Flag (tab)"] --> gallery
+  Pattern --> contract
+  Keystroke --> contract
+  Attribute --> contract
+  gallery["gallery (screen: /)"]
+  contract["contract (screen: /contract/:id)"]
+</div>
+
+<h2 id="entities">Entities</h2>
+
+<section id="Pattern" data-kind="entity" data-durability="tab" data-type-id="0x8d2dff6be1a41645">
+<h3>Pattern — tab</h3>
+<p>
+The six patterns implemented here: the name a reader knows them by, the ARIA
+role that names the widget, and the guide's own page for it. Seeded and never
+written — this is a checked-in reading list, not a thing the app maintains. The
+gallery's table of contents and the contract page's heading are both regions
+over it.
+</p>
+<table data-extract="fields">
+<tr><th>field</th><th>type</th><th>constraint</th><th>notes</th></tr>
+<tr data-ordinal="1"><td>id</td><td>string</td><td><code class="cel">this.size() &lt;= 24</code></td><td>pk, and the route parameter the contract page takes</td></tr>
+<tr data-ordinal="2"><td>name</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>as the guide names it</td></tr>
+<tr data-ordinal="3"><td>role</td><td>string</td><td><code class="cel">this.size() &lt;= 24</code></td><td>the role that names the widget</td></tr>
+<tr data-ordinal="4"><td>apg</td><td>string</td><td><code class="cel">this.startsWith('https://')</code></td><td>the guide's page; the citation, not decoration</td></tr>
+<tr data-ordinal="5"><td>pos</td><td>int32</td><td><code class="cel">this &gt;= 1</code></td><td>the order the gallery presents them in, simplest first</td></tr>
+</table>
+</section>
+
+<section id="Keystroke" data-kind="entity" data-durability="tab" data-type-id="0xd74394fca38707f5">
+<h3>Keystroke — tab</h3>
+<p>
+One row per line of a pattern's published keyboard table. <code>key</code>,
+<code>when</code> and <code>does</code> are the guide's, copied; the app owns
+only <code>reading</code> and <code>departs</code>, which is where it says what
+it actually did. That split is the whole point of the table being data: the
+citation and the claim are different columns, so a departure cannot be made to
+disappear by rewording the specification
+(<a href="#decision-02">decision-02</a>).
+</p>
+<p>
+<code>departs</code> has three values and each is a different kind of honesty:
+<code>no</code> is as-written; <code>stops</code> is a set the guide wraps at
+the ends and this implementation does not
+(<a href="#decision-04">decision-04</a>); <code>declined</code> is an optional
+behaviour not taken, with the reason in the row.
+</p>
+<table data-extract="fields">
+<tr><th>field</th><th>type</th><th>constraint</th><th>notes</th></tr>
+<tr data-ordinal="1"><td>id</td><td>string</td><td><code class="cel">this.size() &lt;= 40</code></td><td>pk, and the name the check cites when it drives the row</td></tr>
+<tr data-ordinal="2"><td>pattern_id</td><td>string</td><td><code class="cel">this.size() &lt;= 24</code></td><td>the pattern whose table this line belongs to</td></tr>
+<tr data-ordinal="3"><td>key</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>the key, or the keys, as the guide names them</td></tr>
+<tr data-ordinal="4"><td>when</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>the condition the line applies under</td></tr>
+<tr data-ordinal="5"><td>does</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>the guide's own wording, verbatim</td></tr>
+<tr data-ordinal="6"><td>reading</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>what this implementation does, in its own words</td></tr>
+<tr data-ordinal="7"><td>departs</td><td>string</td><td><code class="cel">this in ['no', 'stops', 'declined']</code></td><td>how the two stand to each other; the row's mark reads it</td></tr>
+<tr data-ordinal="8"><td>pos</td><td>int32</td><td><code class="cel">this &gt;= 1</code></td><td>the guide's own row order</td></tr>
+</table>
+</section>
+
+<section id="Attribute" data-kind="entity" data-durability="tab" data-type-id="0x85bafc442228e975">
+<h3>Attribute — tab</h3>
+<p>
+The other published table: the roles, states and properties the pattern owes.
+<code>probe</code> is the app's addition and the reason this table is a check
+rather than a decoration — a selector naming the element the row is about, so
+"each tab carries <code>aria-selected</code>" is something a test can go and
+look at (<a href="#decision-06">decision-06</a>). It is not rendered: a reader
+is owed the claim, not the way it is found.
+</p>
+<table data-extract="fields">
+<tr><th>field</th><th>type</th><th>constraint</th><th>notes</th></tr>
+<tr data-ordinal="1"><td>id</td><td>string</td><td><code class="cel">this.size() &lt;= 40</code></td><td>pk</td></tr>
+<tr data-ordinal="2"><td>pattern_id</td><td>string</td><td><code class="cel">this.size() &lt;= 24</code></td><td>the pattern this line belongs to</td></tr>
+<tr data-ordinal="3"><td>name</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>a role name, or an <code>aria-</code> attribute</td></tr>
+<tr data-ordinal="4"><td>on</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>the element that carries it, in words</td></tr>
+<tr data-ordinal="5"><td>does</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>what it means, the guide's wording</td></tr>
+<tr data-ordinal="6"><td>probe</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>the same element as a selector; the check's handle on the claim</td></tr>
+<tr data-ordinal="7"><td>pos</td><td>int32</td><td><code class="cel">this &gt;= 1</code></td><td>the guide's own row order</td></tr>
+</table>
+</section>
+
+<section id="Option" data-kind="entity" data-durability="tab" data-type-id="0xdf5e45e2e4a68817">
+<h3>Option — tab</h3>
+<p>
+The members of the patterns that have members: three tabs, three radio buttons,
+three options, three accordion sections. One table rather than four, because
+the four differ in nothing a schema can see — a member has a key, a label, a
+place in the order, and sometimes a body. The accordion's <code>open</code>
+lives here rather than in <a href="#Flag">Flag</a> for the same reason it is a
+column at all: a section's boolean belongs to the section, and putting it
+elsewhere would need a second key to join on
+(<a href="#decision-07">decision-07</a>).
+</p>
+<table data-extract="fields">
+<tr><th>field</th><th>type</th><th>constraint</th><th>notes</th></tr>
+<tr data-ordinal="1"><td>id</td><td>string</td><td><code class="cel">this.size() &lt;= 24</code></td><td>pk; what <a href="#Choice">Choice</a> names and every gesture form writes</td></tr>
+<tr data-ordinal="2"><td>widget</td><td>string</td><td><code class="cel">this.size() &lt;= 24</code></td><td>which widget it belongs to; every region filters on it</td></tr>
+<tr data-ordinal="3"><td>label</td><td>string</td><td><code class="cel">this.size() &gt; 0</code></td><td>the member's own name</td></tr>
+<tr data-ordinal="4"><td>body</td><td>string</td><td><code class="cel">this.size() &lt;= 400</code></td><td>the panel's content, where the member has a panel</td></tr>
+<tr data-ordinal="5"><td>open</td><td>string</td><td><code class="cel">this in ['true', 'false']</code></td><td>the accordion's boolean; the value is the ARIA vocabulary because <code>aria-expanded</code> binds it directly</td></tr>
+<tr data-ordinal="6"><td>pos</td><td>int32</td><td><code class="cel">this &gt;= 1</code></td><td>the order, and what <code>next</code> and <code>prev</code> are computed over</td></tr>
+</table>
+</section>
+
+<section id="Choice" data-kind="entity" data-durability="tab" data-type-id="0xab920ec0f2a12cce">
+<h3>Choice — tab</h3>
+<p>
+Which member of a widget is current: one row per widget that has a current
+member, and one column. It is the whole of what the arrow keys, the pointer and
+the tab stop all write — three ways in, one column out, which is why a widget
+goes the same way however it was driven
+(<a href="#decision-08">decision-08</a>). The roving tab stop reads it through
+a projection rather than a stored column, so the fact "this member is current"
+is derived at the region and never stored twice.
+</p>
+<table data-extract="fields">
+<tr><th>field</th><th>type</th><th>constraint</th><th>notes</th></tr>
+<tr data-ordinal="1"><td>id</td><td>string</td><td><code class="cel">this.size() &lt;= 24</code></td><td>pk, the widget's name</td></tr>
+<tr data-ordinal="2"><td>value</td><td>string</td><td><code class="cel">this.size() &lt;= 24</code></td><td>the current member's key</td></tr>
+</table>
+</section>
+
+<section id="Flag" data-kind="entity" data-durability="tab" data-type-id="0x943e3eb3016a38e6">
+<h3>Flag — tab</h3>
+<p>
+The two standalone booleans: the disclosure's content shown, the switch on.
+Their values are the strings <code>true</code> and <code>false</code> rather
+than a boolean type, because <code>aria-expanded</code> and
+<code>aria-checked</code> speak that vocabulary and the column is bound
+straight into the attribute — one value for the semantics and the styling hook
+both (<a href="#decision-09">decision-09</a>).
+</p>
+<table data-extract="fields">
+<tr><th>field</th><th>type</th><th>constraint</th><th>notes</th></tr>
+<tr data-ordinal="1"><td>id</td><td>string</td><td><code class="cel">this.size() &lt;= 24</code></td><td>pk, the widget's name</td></tr>
+<tr data-ordinal="2"><td>on</td><td>string</td><td><code class="cel">this in ['true', 'false']</code></td><td>the machine's state, and the ARIA attribute's value</td></tr>
+</table>
+</section>
+
+<h2 id="screens">Screens</h2>
+
+<section id="gallery" data-kind="screen" data-route="/">
+<h3>gallery — every pattern, and the tables it owes</h3>
+<p data-extract="reads">Reads: <a href="#Pattern">Pattern</a> (order
+<code>pos.asc</code>) for the table of contents; <a href="#Keystroke">Keystroke</a>
+and <a href="#Attribute">Attribute</a> (filter <code>pattern_id=eq.&lt;id&gt;</code>,
+order <code>pos.asc</code>), once per section, for the two tables;
+<a href="#Option">Option</a> (filter <code>widget=eq.&lt;id&gt;</code>, order
+<code>pos.asc</code>) for the members of the four patterns that have them;
+<a href="#Choice">Choice</a> and <a href="#Flag">Flag</a> (filter
+<code>id=eq.&lt;id&gt;</code>) for what each widget currently is. The sections
+are written out rather than rendered from a region over
+<a href="#Pattern">Pattern</a>: six patterns are six different widgets, and a
+region binds one template (<a href="#decision-10">decision-10</a>).</p>
+<p data-extract="mutations">Mutations: forms and machines, no reduce. The two
+booleans and the three accordion sections are <code>#Machine</code>s over one
+column (<a href="#decision-09">decision-09</a>); every member of a rover is
+written by a form — the pointer submits the member's own, an arrow key submits
+the neighbour's, Home and End submit the pair the component writes with the
+set's ends in them (<a href="#pick-member">pick-member</a>,
+<a href="#move-tabstop">move-tabstop</a>). <code>keep: 1</code> — the page is
+long and returning to it from a contract page should return to where the reader
+was.</p>
+<div class="storyboard frames">
+<figure id="gallery-loading" data-kind="state" data-state="loading">
+<svg viewBox="0 0 300 420" width="225"><g>
+<rect class="page" width="300" height="420"/>
+<text x="12" y="18" class="h">Patterns</text>
+<line class="rule" x1="0" x2="300" y1="26" y2="26"/>
+<text x="12" y="48" class="big">The Keyboard Contract</text>
+<text x="12" y="62" class="muted">Six patterns, each beside its table.</text>
+<line class="rule" x1="12" x2="288" y1="70" y2="70"/>
+<text x="12" y="100" class="muted">Loading the patterns…</text>
+</g></svg>
+<figcaption>The masthead and the contents strip are already right; only the sections wait.</figcaption>
+</figure>
+<figure id="gallery-empty" data-kind="state" data-state="empty">
+<svg viewBox="0 0 300 420" width="225"><g>
+<rect class="page" width="300" height="420"/>
+<text x="12" y="18" class="h">Patterns</text>
+<line class="rule" x1="0" x2="300" y1="26" y2="26"/>
+<text x="12" y="48" class="big">The Keyboard Contract</text>
+<text x="12" y="62" class="muted">Six patterns, each beside its table.</text>
+<line class="rule" x1="12" x2="288" y1="70" y2="70"/>
+<text x="12" y="100" class="muted">No patterns.</text>
+</g></svg>
+<figcaption>No patterns seeded. Unreachable in the shipped app — the rows are checked in — and drawn because the terminal owns the state whether or not this app can reach it.</figcaption>
+</figure>
+<figure id="gallery-populated" data-kind="state" data-state="populated">
+<svg viewBox="0 0 300 420" width="225"><g>
+<rect class="page" width="300" height="420"/>
+<text x="12" y="18" class="h">Patterns</text>
+<line class="rule" x1="0" x2="300" y1="26" y2="26"/>
+<text x="12" y="48" class="big">The Keyboard Contract</text>
+<text x="12" y="62" class="muted">Six patterns, each beside its table.</text>
+<line class="rule" x1="12" x2="288" y1="70" y2="70"/>
+<rect class="ctl" x="12" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="38" y="95">DISCLOSUR</text>
+<rect class="ctl" x="68" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="94" y="95">SWITCH</text>
+<rect class="ctl" x="124" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="150" y="95">TABS</text>
+<rect class="ctl" x="180" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="206" y="95">RADIO</text>
+<rect class="ctl" x="236" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="262" y="95">LISTBOX</text>
+<text x="12" y="122" class="h">Tabs</text>
+<text x="12" y="136" class="muted">One panel of several, chosen from a strip.</text>
+<rect class="well" x="12" y="146" width="276" height="56" rx="4"/>
+<rect class="on" x="20" y="154" width="56" height="18" rx="2"/><text class="mid sect" x="48" y="166">ROVING</text>
+<rect class="ctl" x="80" y="154" width="56" height="18" rx="2"/><text class="mid sect" x="108" y="166">VIRTUAL</text>
+<rect class="ctl" x="140" y="154" width="56" height="18" rx="2"/><text class="mid sect" x="168" y="166">NEITHER</text>
+<text x="20" y="190" class="muted mono">Roving panel</text>
+<text x="12" y="222" class="sect">KEY</text><text x="70" y="222" class="sect">THE GUIDE SAYS</text><text x="220" y="222" class="sect">HERE</text>
+<line class="heavy" x1="12" x2="288" y1="226" y2="226"/>
+<rect class="ctl" x="12" y="231" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="240">Right</text><text class="mono muted" x="70" y="240">next, wraps</text><text class="mono warn" x="220" y="240">stops</text><line class="rule" x1="12" x2="288" y1="244" y2="244"/>
+<rect class="ctl" x="12" y="247" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="256">Left</text><text class="mono muted" x="70" y="256">prev, wraps</text><text class="mono warn" x="220" y="256">stops</text><line class="rule" x1="12" x2="288" y1="260" y2="260"/>
+<rect class="ctl" x="12" y="263" width="46" height="12" rx="2"/><text class="mono" x="16" y="272">Home</text><text class="mono muted" x="70" y="272">first tab</text><text class="mono" x="220" y="272">as written</text><line class="rule" x1="12" x2="288" y1="276" y2="276"/>
+<rect class="ctl" x="12" y="279" width="46" height="12" rx="2"/><text class="mono" x="16" y="288">End</text><text class="mono muted" x="70" y="288">last tab</text><text class="mono" x="220" y="288">as written</text><line class="rule" x1="12" x2="288" y1="292" y2="292"/>
+</g></svg>
+<figcaption>One section: heading, sentence, the widget in its well, then the guide's table under it. The two rows the guide wraps and this app does not are marked.</figcaption>
+</figure>
+<figure id="gallery-expanded" data-kind="state" data-state="expanded">
+<svg viewBox="0 0 300 420" width="225"><g>
+<rect class="page" width="300" height="420"/>
+<text x="12" y="18" class="h">Patterns</text>
+<line class="rule" x1="0" x2="300" y1="26" y2="26"/>
+<text x="12" y="48" class="big">The Keyboard Contract</text>
+<text x="12" y="62" class="muted">Six patterns, each beside its table.</text>
+<line class="rule" x1="12" x2="288" y1="70" y2="70"/>
+<rect class="ctl" x="12" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="38" y="95">DISCLOSUR</text>
+<rect class="ctl" x="68" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="94" y="95">SWITCH</text>
+<rect class="ctl" x="124" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="150" y="95">TABS</text>
+<rect class="ctl" x="180" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="206" y="95">RADIO</text>
+<rect class="ctl" x="236" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="262" y="95">LISTBOX</text>
+<text x="12" y="122" class="h">Tabs</text>
+<text x="12" y="136" class="muted">One panel of several, chosen from a strip.</text>
+<rect class="well" x="12" y="146" width="276" height="56" rx="4"/>
+<rect class="ctl" x="20" y="154" width="56" height="18" rx="2"/><text class="mid sect" x="48" y="166">ROVING</text>
+<rect class="on" x="80" y="154" width="56" height="18" rx="2"/><text class="mid sect" x="108" y="166">VIRTUAL</text>
+<rect class="ring" x="78" y="152" width="60" height="22" rx="3"/>
+<rect class="ctl" x="140" y="154" width="56" height="18" rx="2"/><text class="mid sect" x="168" y="166">NEITHER</text>
+<text x="20" y="190" class="muted mono">Virtual panel</text>
+<text x="12" y="222" class="sect">KEY</text><text x="70" y="222" class="sect">THE GUIDE SAYS</text><text x="220" y="222" class="sect">HERE</text>
+<line class="heavy" x1="12" x2="288" y1="226" y2="226"/>
+<rect class="ctl" x="12" y="231" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="240">Right</text><text class="mono muted" x="70" y="240">next, wraps</text><text class="mono warn" x="220" y="240">stops</text><line class="rule" x1="12" x2="288" y1="244" y2="244"/>
+<rect class="ctl" x="12" y="247" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="256">Left</text><text class="mono muted" x="70" y="256">prev, wraps</text><text class="mono warn" x="220" y="256">stops</text><line class="rule" x1="12" x2="288" y1="260" y2="260"/>
+<rect class="ctl" x="12" y="263" width="46" height="12" rx="2"/><text class="mono" x="16" y="272">Home</text><text class="mono muted" x="70" y="272">first tab</text><text class="mono" x="220" y="272">as written</text><line class="rule" x1="12" x2="288" y1="276" y2="276"/>
+<rect class="ctl" x="12" y="279" width="46" height="12" rx="2"/><text class="mono" x="16" y="288">End</text><text class="mono muted" x="70" y="288">last tab</text><text class="mono" x="220" y="288">as written</text><line class="rule" x1="12" x2="288" y1="292" y2="292"/>
+</g></svg>
+<figcaption>The reader has moved: the tab stop and the selection are on the second tab, the focus ring is on it, and its panel is the one on screen. One gesture did both.</figcaption>
+</figure>
+<figure id="gallery-populated-dark" data-kind="state" data-state="populated-dark">
+<svg viewBox="0 0 300 420" width="225"><g class="dark">
+<rect class="page" width="300" height="420"/>
+<text x="12" y="18" class="h">Patterns</text>
+<line class="rule" x1="0" x2="300" y1="26" y2="26"/>
+<text x="12" y="48" class="big">The Keyboard Contract</text>
+<text x="12" y="62" class="muted">Six patterns, each beside its table.</text>
+<line class="rule" x1="12" x2="288" y1="70" y2="70"/>
+<rect class="ctl" x="12" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="38" y="95">DISCLOSUR</text>
+<rect class="ctl" x="68" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="94" y="95">SWITCH</text>
+<rect class="ctl" x="124" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="150" y="95">TABS</text>
+<rect class="ctl" x="180" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="206" y="95">RADIO</text>
+<rect class="ctl" x="236" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="262" y="95">LISTBOX</text>
+<text x="12" y="122" class="h">Tabs</text>
+<text x="12" y="136" class="muted">One panel of several, chosen from a strip.</text>
+<rect class="well" x="12" y="146" width="276" height="56" rx="4"/>
+<rect class="ctl" x="20" y="154" width="56" height="18" rx="2"/><text class="mid sect" x="48" y="166">ROVING</text>
+<rect class="on" x="80" y="154" width="56" height="18" rx="2"/><text class="mid sect" x="108" y="166">VIRTUAL</text>
+<rect class="ring" x="78" y="152" width="60" height="22" rx="3"/>
+<rect class="ctl" x="140" y="154" width="56" height="18" rx="2"/><text class="mid sect" x="168" y="166">NEITHER</text>
+<text x="20" y="190" class="muted mono">Virtual panel</text>
+<text x="12" y="222" class="sect">KEY</text><text x="70" y="222" class="sect">THE GUIDE SAYS</text><text x="220" y="222" class="sect">HERE</text>
+<line class="heavy" x1="12" x2="288" y1="226" y2="226"/>
+<rect class="ctl" x="12" y="231" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="240">Right</text><text class="mono muted" x="70" y="240">next, wraps</text><text class="mono warn" x="220" y="240">stops</text><line class="rule" x1="12" x2="288" y1="244" y2="244"/>
+<rect class="ctl" x="12" y="247" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="256">Left</text><text class="mono muted" x="70" y="256">prev, wraps</text><text class="mono warn" x="220" y="256">stops</text><line class="rule" x1="12" x2="288" y1="260" y2="260"/>
+<rect class="ctl" x="12" y="263" width="46" height="12" rx="2"/><text class="mono" x="16" y="272">Home</text><text class="mono muted" x="70" y="272">first tab</text><text class="mono" x="220" y="272">as written</text><line class="rule" x1="12" x2="288" y1="276" y2="276"/>
+<rect class="ctl" x="12" y="279" width="46" height="12" rx="2"/><text class="mono" x="16" y="288">End</text><text class="mono muted" x="70" y="288">last tab</text><text class="mono" x="220" y="288">as written</text><line class="rule" x1="12" x2="288" y1="292" y2="292"/>
+</g></svg>
+<figcaption>The same sheet on a dark ground. The accent moves so the focus ring keeps its contrast; nothing else is redrawn.</figcaption>
+</figure>
+<figure id="gallery-network-error" data-kind="state" data-state="network-error">
+<svg viewBox="0 0 300 420" width="225"><g>
+<rect class="page" width="300" height="420"/>
+<text x="12" y="18" class="h">Patterns</text>
+<line class="rule" x1="0" x2="300" y1="26" y2="26"/>
+<text x="12" y="48" class="big">The Keyboard Contract</text>
+<text x="12" y="62" class="muted">Six patterns, each beside its table.</text>
+<line class="rule" x1="12" x2="288" y1="70" y2="70"/>
+<rect class="ctl" x="12" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="38" y="95">DISCLOSUR</text>
+<rect class="ctl" x="68" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="94" y="95">SWITCH</text>
+<rect class="ctl" x="124" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="150" y="95">TABS</text>
+<rect class="ctl" x="180" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="206" y="95">RADIO</text>
+<rect class="ctl" x="236" y="84" width="52" height="16" rx="3"/><text class="mid sect" x="262" y="95">LISTBOX</text>
+<text x="12" y="122" class="h">Tabs</text>
+<rect class="well" x="12" y="136" width="276" height="56" rx="4"/>
+<rect class="on" x="20" y="144" width="56" height="18" rx="2"/><text class="mid sect" x="48" y="156">ROVING</text>
+<rect class="ctl" x="80" y="144" width="56" height="18" rx="2"/><text class="mid sect" x="108" y="156">VIRTUAL</text>
+<rect class="ctl" x="140" y="144" width="56" height="18" rx="2"/><text class="mid sect" x="168" y="156">NEITHER</text>
+<text x="20" y="180" class="muted mono">Roving panel</text>
+<text x="12" y="208" class="warn">That choice could not be recorded — the strip is back where it was.</text>
+</g></svg>
+<figcaption>A write the store withdrew. The widget shows what the store still holds and the line says so — a widget that silently disagrees with its own state is the worst thing this page could do.</figcaption>
+</figure>
+</div>
+<script type="application/json" data-kind="paths" data-of="gallery">
+{
+  "arrive": {"states": ["loading", "empty", "populated"], "accepts": ["accept-gallery-lists-patterns", "accept-aria-table-shown", "accept-table-is-verbatim"]},
+  "walk_the_page": {"states": ["populated", "expanded"], "accepts": ["accept-keyboard-only", "accept-one-tab-stop", "accept-tabstop-remembers"]},
+  "tabs": {"states": ["populated", "expanded"], "accepts": ["accept-tabs-arrows", "accept-tabs-selected"]},
+  "radio": {"states": ["populated", "expanded"], "accepts": ["accept-radio-arrows", "accept-radio-one-checked"]},
+  "listbox": {"states": ["populated", "expanded"], "accepts": ["accept-listbox-arrows", "accept-listbox-one-selected"]},
+  "toggles": {"states": ["populated", "expanded"], "accepts": ["accept-disclosure", "accept-switch"]},
+  "accordion": {"states": ["populated", "expanded"], "accepts": ["accept-accordion-keys", "accept-accordion-multiple"]},
+  "ends": {"states": ["expanded", "expanded"], "accepts": ["accept-departures-marked", "accept-aria-present"]},
+  "night": {"states": ["populated", "populated-dark"], "accepts": ["accept-dark-twin", "accept-touch-and-motion"]}
+}
+</script>
+</section>
+
+<section id="contract" data-kind="screen" data-route="/contract/:id">
+<h3>contract — one pattern, in full</h3>
+<p data-extract="reads">Reads: <a href="#Pattern">Pattern</a> (filter
+<code>id=eq.{param.id}</code>) for the heading and the citation;
+<a href="#Keystroke">Keystroke</a> and <a href="#Attribute">Attribute</a>
+(filter <code>pattern_id=eq.{param.id}</code>, order <code>pos.asc</code>) for
+the two tables in full. No widget: the gallery is where a pattern is operated,
+and this page is where it is read.</p>
+<p data-extract="mutations">Mutations: none. <code>keep: 0</code> — the route
+is parametrised, so a held instance would accumulate one screen per pattern
+ever opened. <code>strip: false</code> — it is reached from a section, never
+from everywhere.</p>
+<div class="storyboard frames">
+<figure id="contract-empty" data-kind="state" data-state="empty">
+<svg viewBox="0 0 300 420" width="225"><g>
+<rect class="page" width="300" height="420"/>
+<text x="12" y="18" class="h">Patterns</text>
+<line class="rule" x1="0" x2="300" y1="26" y2="26"/>
+<text x="12" y="48" class="big">Tabs</text>
+<text x="12" y="62" class="muted">Role tablist · the guide's page</text>
+<line class="rule" x1="12" x2="288" y1="70" y2="70"/>
+<text x="12" y="100" class="muted">No keystrokes recorded for this pattern.</text>
+</g></svg>
+<figcaption>A route parameter naming no pattern. The tables say so separately, because a page with two empty tables and no explanation reads as broken.</figcaption>
+</figure>
+<figure id="contract-populated" data-kind="state" data-state="populated">
+<svg viewBox="0 0 300 420" width="225"><g>
+<rect class="page" width="300" height="420"/>
+<text x="12" y="18" class="h">Patterns</text>
+<line class="rule" x1="0" x2="300" y1="26" y2="26"/>
+<text x="12" y="48" class="big">Tabs</text>
+<text x="12" y="62" class="muted">Role tablist · the guide's page</text>
+<line class="rule" x1="12" x2="288" y1="70" y2="70"/>
+<text x="12" y="92" class="sect">KEY</text><text x="70" y="92" class="sect">THE GUIDE SAYS</text><text x="220" y="92" class="sect">HERE</text>
+<line class="heavy" x1="12" x2="288" y1="96" y2="96"/>
+<rect class="ctl" x="12" y="101" width="46" height="12" rx="2"/><text class="mono" x="16" y="110">Tab</text><text class="mono muted" x="70" y="110">into the list</text><text class="mono" x="220" y="110">as written</text><line class="rule" x1="12" x2="288" y1="114" y2="114"/>
+<rect class="ctl" x="12" y="117" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="126">Right</text><text class="mono muted" x="70" y="126">next, wraps</text><text class="mono warn" x="220" y="126">stops</text><line class="rule" x1="12" x2="288" y1="130" y2="130"/>
+<rect class="ctl" x="12" y="133" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="142">Left</text><text class="mono muted" x="70" y="142">prev, wraps</text><text class="mono warn" x="220" y="142">stops</text><line class="rule" x1="12" x2="288" y1="146" y2="146"/>
+<rect class="ctl" x="12" y="149" width="46" height="12" rx="2"/><text class="mono" x="16" y="158">Home</text><text class="mono muted" x="70" y="158">first tab</text><text class="mono" x="220" y="158">as written</text><line class="rule" x1="12" x2="288" y1="162" y2="162"/>
+<rect class="ctl" x="12" y="165" width="46" height="12" rx="2"/><text class="mono" x="16" y="174">End</text><text class="mono muted" x="70" y="174">last tab</text><text class="mono" x="220" y="174">as written</text><line class="rule" x1="12" x2="288" y1="178" y2="178"/>
+<text x="12" y="200" class="sect">ROLE OR ATTRIBUTE</text><text x="110" y="200" class="sect">ON</text><text x="180" y="200" class="sect">THE GUIDE SAYS</text>
+<line class="heavy" x1="12" x2="288" y1="204" y2="204"/>
+<text class="mono" x="12" y="218">tablist</text><text class="mono muted" x="110" y="218">the strip</text><line class="rule" x1="12" x2="288" y1="222" y2="222"/>
+<text class="mono" x="12" y="234">tab</text><text class="mono muted" x="110" y="234">each tab</text><line class="rule" x1="12" x2="288" y1="238" y2="238"/>
+<text class="mono" x="12" y="250">tabpanel</text><text class="mono muted" x="110" y="250">each panel</text><line class="rule" x1="12" x2="288" y1="254" y2="254"/>
+<text class="mono" x="12" y="266">aria-selected</text><text class="mono muted" x="110" y="266">each tab</text><line class="rule" x1="12" x2="288" y1="270" y2="270"/>
+<text class="mono" x="12" y="282">aria-controls</text><text class="mono muted" x="110" y="282">each tab</text><line class="rule" x1="12" x2="288" y1="286" y2="286"/>
+<text class="mono" x="12" y="298">aria-labelledby</text><text class="mono muted" x="110" y="298">each panel</text><line class="rule" x1="12" x2="288" y1="302" y2="302"/>
+</g></svg>
+<figcaption>The whole contract on one page: five keystrokes, six attributes, the guide's wording in the wide column and this implementation's in the last.</figcaption>
+</figure>
+<figure id="contract-populated-dark" data-kind="state" data-state="populated-dark">
+<svg viewBox="0 0 300 420" width="225"><g class="dark">
+<rect class="page" width="300" height="420"/>
+<text x="12" y="18" class="h">Patterns</text>
+<line class="rule" x1="0" x2="300" y1="26" y2="26"/>
+<text x="12" y="48" class="big">Tabs</text>
+<text x="12" y="62" class="muted">Role tablist · the guide's page</text>
+<line class="rule" x1="12" x2="288" y1="70" y2="70"/>
+<text x="12" y="92" class="sect">KEY</text><text x="70" y="92" class="sect">THE GUIDE SAYS</text><text x="220" y="92" class="sect">HERE</text>
+<line class="heavy" x1="12" x2="288" y1="96" y2="96"/>
+<rect class="ctl" x="12" y="101" width="46" height="12" rx="2"/><text class="mono" x="16" y="110">Tab</text><text class="mono muted" x="70" y="110">into the list</text><text class="mono" x="220" y="110">as written</text><line class="rule" x1="12" x2="288" y1="114" y2="114"/>
+<rect class="ctl" x="12" y="117" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="126">Right</text><text class="mono muted" x="70" y="126">next, wraps</text><text class="mono warn" x="220" y="126">stops</text><line class="rule" x1="12" x2="288" y1="130" y2="130"/>
+<rect class="ctl" x="12" y="133" width="46" height="12" rx="2"/><text class="mono warn" x="16" y="142">Left</text><text class="mono muted" x="70" y="142">prev, wraps</text><text class="mono warn" x="220" y="142">stops</text><line class="rule" x1="12" x2="288" y1="146" y2="146"/>
+<rect class="ctl" x="12" y="149" width="46" height="12" rx="2"/><text class="mono" x="16" y="158">Home</text><text class="mono muted" x="70" y="158">first tab</text><text class="mono" x="220" y="158">as written</text><line class="rule" x1="12" x2="288" y1="162" y2="162"/>
+<rect class="ctl" x="12" y="165" width="46" height="12" rx="2"/><text class="mono" x="16" y="174">End</text><text class="mono muted" x="70" y="174">last tab</text><text class="mono" x="220" y="174">as written</text><line class="rule" x1="12" x2="288" y1="178" y2="178"/>
+</g></svg>
+<figcaption>The same page, other ground.</figcaption>
+</figure>
+</div>
+<script type="application/json" data-kind="paths" data-of="contract">
+{
+  "read_the_contract": {"states": ["populated"], "accepts": ["accept-contract-page", "accept-departures-marked"]},
+  "no_such_pattern": {"states": ["empty"], "accepts": ["accept-contract-page"]},
+  "night": {"states": ["populated", "populated-dark"], "accepts": ["accept-dark-twin"]}
+}
+</script>
+</section>
+
+
+<h2 id="flows">Flows</h2>
+
+<section id="toggle-flag" data-kind="flow">
+<h3>toggle-flag — the disclosure and the switch</h3>
+<div class="mermaid">
+graph LR
+  A[Enter or Space on the button] --> B[the platform fires a click]
+  B --> C[machine: false to true, true to false]
+  C --> D[Flag.on written]
+  D --> E[aria-expanded or aria-checked binds it]
+</div>
+</section>
+
+<section id="toggle-section" data-kind="flow">
+<h3>toggle-section — one accordion section</h3>
+<div class="mermaid">
+graph LR
+  A[Enter or Space on a header] --> B[that section's own machine]
+  B --> C[Option.open written for that row]
+  C --> D[aria-expanded and the panel both bind it]
+  D --> E[the other sections are untouched]
+</div>
+</section>
+
+<section id="pick-member" data-kind="flow">
+<h3>pick-member — a pointer chooses</h3>
+<div class="mermaid">
+graph LR
+  A[click a tab, radio or option] --> B[the member's own form submits]
+  B --> C[Choice.value takes that member's key]
+  C --> D[the projection recomputes which member is current]
+</div>
+</section>
+
+<section id="move-tabstop" data-kind="flow">
+<h3>move-tabstop — an arrow key moves</h3>
+<div class="mermaid">
+graph LR
+  A[arrow key inside the widget] --> B[data-key names a gesture form]
+  B --> C[the form carries the neighbour from the projection]
+  C --> D[Choice.value written]
+  D --> E[data-rove moves the tab stop, and focus follows it]
+</div>
+</section>
+
+<section id="open-contract" data-kind="flow">
+<h3>open-contract — read one in full</h3>
+<div class="mermaid">
+graph LR
+  A[the link under a section heading] --> B[navigate to /contract/:id]
+  B --> C[both tables read that pattern's rows]
+</div>
+</section>
+
+<h2 id="invariants">Invariants &amp; test pairs</h2>
+
+<p id="test-every-keystroke" data-kind="test" data-of="Keystroke" data-accepts="accept-table-is-verbatim accept-keyboard-only accept-departures-marked">
+Every row of every published keystroke table is driven by a check that names
+it. The contract suite records the id of each row it drives and compares the
+set at the end: <code class="cel">output.driven == input.rows &amp;&amp; output.undriven == []</code>.
+A row nobody drove is a line of the specification this app has not answered,
+and the run says which one rather than passing quietly.
+</p>
+
+<p id="test-every-attribute" data-kind="test" data-of="Attribute" data-accepts="accept-aria-present accept-aria-table-shown">
+Every element a published attribute row names is on the page carrying what the
+row says: <code class="cel">output.missing == [] &amp;&amp; output.checked == input.rows</code>.
+A role row asserts the element exists and wears that role; an
+<code>aria-</code> row asserts every element the probe matches carries the
+attribute. This is the second table graded the same way as the first.
+</p>
+
+<p id="test-one-tab-stop" data-kind="test" data-of="Choice" data-accepts="accept-one-tab-stop accept-tabstop-remembers">
+A tab list, a radio group and a listbox are each exactly one stop in the page's
+tab sequence, and the stop is on the current member:
+<code class="cel">output.tabbable.all(n, n == 1) &amp;&amp; output.stopIsCurrent</code>.
+Two members in the tab order is a tab sequence decided by document order rather
+than by the column, which is the failure the terminal owning the tab order
+exists to make unrepresentable.
+</p>
+
+<p id="test-tabs-arrows" data-kind="test" data-of="Choice" data-accepts="accept-tabs-arrows accept-tabs-selected">
+The arrows move the tab and activate it in one gesture, Home and End reach the
+ends, and exactly one tab is selected throughout:
+<code class="cel">output.value == "none" &amp;&amp; output.selectedCount == 1 &amp;&amp; output.panelShown == output.value</code>.
+</p>
+
+<p id="test-radio-arrows" data-kind="test" data-of="Choice" data-accepts="accept-radio-arrows accept-radio-one-checked">
+The arrows move and check together and Space checks the button with focus, with
+exactly one button checked at every point:
+<code class="cel">output.checkedCount == 1 &amp;&amp; output.value == "brief"</code>.
+</p>
+
+<p id="test-listbox-arrows" data-kind="test" data-of="Choice" data-accepts="accept-listbox-arrows accept-listbox-one-selected">
+The arrows move and select, Home and End reach the ends, and exactly one option
+is selected: <code class="cel">output.value == "dom" &amp;&amp; output.selectedCount == 1</code>.
+</p>
+
+<p id="test-ends-stop" data-kind="test" data-of="Choice" data-accepts="accept-departures-marked">
+An arrow at the end of a set names the member it is already on, so the write is
+a no-op and the tab list and the radio group stop where the guide would have
+them wrap: <code class="cel">output.value == input.at &amp;&amp; output.rowsMarkedStops == 4</code>.
+The second half is the one that matters — the behaviour is a stated departure,
+so the number of rows wearing that mark is itself an assertion
+(<a href="#decision-04">decision-04</a>).
+</p>
+
+<p id="test-disclosure" data-kind="test" data-of="Flag" data-accepts="accept-disclosure">
+The disclosure toggles on Enter and on Space and says which state it is in:
+<code class="cel">output.afterEnter == "true" &amp;&amp; output.afterSpace == "false" &amp;&amp; output.expandedMatches</code>.
+Neither key is listened for: the control is a button and the platform activates
+it, which is what makes this row cheap to satisfy and worth stating anyway.
+</p>
+
+<p id="test-switch" data-kind="test" data-of="Flag" data-accepts="accept-switch">
+The switch toggles with Space and carries its role and state:
+<code class="cel">output.on == "true" &amp;&amp; output.role == "switch" &amp;&amp; output.checked == output.on</code>.
+The last conjunct is the point — the attribute is the column, so they cannot
+disagree.
+</p>
+
+<p id="test-accordion" data-kind="test" data-of="Option" data-accepts="accept-accordion-keys accept-accordion-multiple">
+The sections open and close independently and more than one may stand open:
+<code class="cel">output.open == 2 &amp;&amp; output.expanded == output.open</code>.
+</p>
+
+<p id="test-gallery" data-kind="test" data-of="gallery" data-accepts="accept-gallery-lists-patterns">
+Every pattern is on the gallery with its live widget and both of its tables:
+<code class="cel">output.sections == input.patterns &amp;&amp; output.keyTables == input.patterns &amp;&amp; output.attrTables == input.patterns</code>.
+</p>
+
+<p id="test-contract" data-kind="test" data-of="contract" data-accepts="accept-contract-page">
+A pattern's contract page shows that pattern's rows and no other's:
+<code class="cel">output.keystrokes == 5 &amp;&amp; output.attributes == 6 &amp;&amp; output.otherPatterns == 0</code>.
+</p>
+
+<p id="test-appearance" data-kind="test" data-of="gallery" data-accepts="accept-dark-twin accept-touch-and-motion">
+Both appearances render, every target is at least a thumb wide, and nothing
+animates: <code class="cel">output.smallestTarget &gt;= input.minSize &amp;&amp; output.animations == 0</code>.
+A page about keyboard operation must not move under the caret.
+</p>
+
+<h2 id="decisions">Decisions</h2>
+
+<p id="decision-01" data-kind="decision"><strong>01 — everything is
+<code>tab</code>, and four of the six tables are seeded.</strong> Nothing here
+is a reader's data: four tables are the guide's text checked in, and the two
+that change are which member is current and whether a boolean is on. Both die
+with the tab and should — a specimen sheet that remembered where you left it
+would be remembering the wrong thing. No migration, no policy, no publication,
+no pipeline.</p>
+
+<p id="decision-02" data-kind="decision"><strong>02 — the citation and the
+claim are different columns.</strong> <code>does</code> is the guide's wording
+and nothing in this repository may edit it; <code>reading</code> is what this
+implementation actually does. Keeping them apart is what makes a departure
+impossible to hide: rewording the specification to match the code would be a
+diff on a column that is supposed to be a quotation, and it would be visible as
+one.</p>
+
+<p id="decision-03" data-kind="decision"><strong>03 — coverage of the table is
+the check.</strong> The contract suite drives each keystroke row and records
+the id it drove; the last case asserts the driven set equals the seeded set. It
+is the same shape as the acceptance-coverage lint one rung up, and it exists
+for the same reason: a specification with rows nobody exercised is a
+specification the app has not answered, and nothing else in the run would say
+so.</p>
+
+<p id="decision-04" data-kind="decision"><strong>04 — the ends do not wrap, and
+that is a platform limit, stated.</strong> The guide specifies that a tab list
+and a radio group wrap from the last member to the first. The read tier's
+projection answers <code>next</code> and <code>prev</code> — a row's
+neighbours — and an end names itself, deliberately, because wrapping is a
+per-pattern decision the read tier declines to take. There is no way to express
+"the first member" from the last member's row: that is a fact about the set, and
+a projection answers about a row. Home and End work only because the member list
+is compile-time data, so the component can write the two ends in as literals;
+an app whose members were a reader's rows could not do even that. Four rows are
+marked <code>stops</code> and the suite counts them.</p>
+
+<p id="decision-05" data-kind="decision"><strong>05 — three patterns are one
+app-local component.</strong> Tabs, radio groups and single-select listboxes
+differ in two role names, one state attribute and whether they carry panels;
+they do not differ in a single mechanic. <code>w3caria--rover</code> is the
+shape, and the three instances are the differences. The alternative — three
+copies — is the failure the component tier exists to prevent, and on a page
+whose whole subject is behaviour, three copies would drift in exactly the
+behaviour being demonstrated.</p>
+
+<p id="decision-06" data-kind="decision"><strong>06 — the attribute table
+carries a selector nobody reads.</strong> <code>probe</code> is the app's
+addition to the guide's table and it is not rendered. It is what turns "each
+tab carries <code>aria-selected</code>" from a sentence into something a check
+can go and look at. A table of claims with no handle on the page is a table
+that goes stale the first time the markup moves.</p>
+
+<p id="decision-07" data-kind="decision"><strong>07 — the accordion's boolean
+is a column on the member.</strong> The disclosure and the switch keep theirs in
+<a href="#Flag">Flag</a> because they are not members of anything. A section's
+open state belongs to the section, and putting it in <a href="#Flag">Flag</a>
+would need a key to join on that the section already is.</p>
+
+<p id="decision-08" data-kind="decision"><strong>08 — one column, three ways to
+write it.</strong> A pointer submits the member's own form, an arrow key
+submits the neighbour's, and the tab stop reads the same column back. All three
+are ordinary writes to <a href="#Choice">Choice</a>, so a widget cannot be in a
+state one input modality can reach and another cannot — which is the bug this
+whole app is about.</p>
+
+<p id="decision-09" data-kind="decision"><strong>09 — the state name is the
+ARIA value.</strong> The machines' states are <code>"true"</code> and
+<code>"false"</code>, because <code>aria-expanded</code> and
+<code>aria-checked</code> speak that vocabulary and one column then binds both
+the semantics and the styling hook. A second spelling of the same fact is a
+second thing to keep in step, and on this page it would be the thing being
+demonstrated.</p>
+
+<p id="decision-10" data-kind="decision"><strong>10 — the six sections are
+written out, not rendered from a region.</strong> A region binds one template
+and the six widgets are six different shapes. The tables inside each section
+are regions, and the section frame around them is repeated markup a CUE
+definition generates — which is the honest split: what varies is a widget, what
+repeats is a frame.</p>
+
+<p id="decision-11" data-kind="decision"><strong>11 — nothing animates.</strong>
+A height transition on a disclosure or an accordion panel is what makes an arrow
+key feel unresponsive, and it moves a target while a reader is travelling to it.
+There is nothing here for <code>prefers-reduced-motion</code> to collapse,
+which is the only honest way to satisfy that check on a page like this.</p>
+
+<p id="decision-12" data-kind="decision"><strong>12 — escape hatches:
+none.</strong> No container, no WASM unit, no vendored component, no external
+endpoint, and — unusually for this tree — no Jessie either. Every behaviour
+here is a machine, a form or a projection. That is the finding worth carrying:
+six APG patterns and not one line of app code.</p>
+
+<h2 id="reviews">Reviews</h2>
+
+<section data-kind="review" id="review-backend">
+<h3>backend — the data plane</h3>
+<p class="verdict">Verdict: signed.</p>
+<ul>
+<li>Six tables, one tier, no server, and four of them immutable after seeding.
+That is the right shape for a document that happens to be executable.</li>
+<li>Pushed back on <a href="#Attribute">Attribute</a>'s <code>probe</code>
+column as "test data in the schema". Withdrew it: the row is a claim about a
+specific element, and a claim with no way to find its subject is not checkable.
+The column IS the claim's object.</li>
+<li>One table for the members of four different widgets is right. They differ
+in nothing a schema can see, and four tables would have made the rover
+component take a table name as a parameter for no gain.</li>
+<li>Open, and accepted: <code>Option.open</code> is meaningless for three of the
+four widgets, where it is seeded <code>false</code> and nothing reads it. A
+column that applies to one member set is the cost of one table for four.</li>
+</ul>
+</section>
+
+<section data-kind="review" id="review-frontend">
+<h3>frontend — the assembly</h3>
+<p class="verdict">Verdict: signed.</p>
+<ul>
+<li>Three patterns, one component, and the component's parameters are exactly
+the differences — two role names, a state attribute, whether there are panels,
+and which keys move where. That last one is written per instance rather than
+defaulted, which is right: which arrows a pattern answers to <em>is</em> the
+pattern.</li>
+<li>The gesture forms are the part worth reading twice. An arrow key names a
+form; the form carries the neighbour the projection computed. Nothing
+imperative moves anything, and the same write happens whether the reader used a
+key or a pointer.</li>
+<li>Home and End are the component's own literals because the projection cannot
+name a set's ends. Flagged as a limit rather than hidden as a helper — see
+<a href="#decision-04">decision-04</a>.</li>
+<li>Each accordion section is a nested singleton region over its own row so it
+can carry its own machine. That is the pattern to reuse whenever N independent
+booleans share one list.</li>
+</ul>
+</section>
+
+<section data-kind="review" id="review-designer">
+<h3>designer — the identity</h3>
+<p class="verdict">Verdict: signed.</p>
+<ul>
+<li>Specimen Sheet is the right restraint. Every other app in this tree is
+designed to be looked at; this one is operated with the eyes closed and then
+read by someone checking the result, and neither audience wants a mood.</li>
+<li>The well is the whole visual system: inside it you are operating something,
+outside it you are reading about it. One tinted surface, one hairline, and no
+other container anywhere on the page.</li>
+<li>The focus ring is the design, and it is never removed for any input
+modality. Held the line on that against a "hide it for mouse users" suggestion:
+on this page a suppressed ring is a defect, not a preference.</li>
+<li>A departure is marked in the attention colour and never in the danger one.
+A stated choice coloured as an error is a lie about the choice.</li>
+<li>The checked and selected marks are text — a bullet, a tick — and not colour
+alone. On this page of all pages, a state only a sighted reader can perceive
+would be the joke telling itself.</li>
+</ul>
+</section>
+
+<section data-kind="review" id="review-ux">
+<h3>ux — the felt experience</h3>
+<p class="verdict">Verdict: signed, with one carried concern.</p>
+<ul>
+<li>The page reads in the order it is operated: what the widget is, the widget,
+then what it owes. A reader who cannot see the widget still gets the sentence
+before the table.</li>
+<li>Nothing animates, and that is a felt decision rather than a lazy one: an
+expanding panel under a caret makes an arrow key feel broken, and this page has
+more arrow keys than any other in the tree.</li>
+<li>Carried concern: the ends not wrapping is correct-as-stated and still
+surprising in use. A reader pressing Right at the last tab gets nothing and no
+feedback that nothing was possible. The mitigation is that the row says so, on
+the same screen, a few centimetres below — which is more than most
+implementations offer and less than a wrap would.</li>
+<li>Asked for and got the contract page. A section's table is enough to check a
+claim; the whole contract in one place is what someone comparing two
+implementations actually needs.</li>
+</ul>
+</section>
+
+<section data-kind="review" id="review-qa">
+<h3>qa — the evidence</h3>
+<p class="verdict">Verdict: signed.</p>
+<ul>
+<li>Two suites, both of which grade a published table rather than the app's own
+opinion of itself, and both of which fail on a row nobody exercised. That
+coverage assertion is the strongest thing here: it is what stops the tables
+from becoming decoration the first time a pattern is added.</li>
+<li>Both run at <code>test</code> — they need a mounted screen and no cluster,
+which is the layer the loop's rule assigns them.</li>
+<li>Asked whether the keystroke rows should carry a machine-readable
+expectation so the driver could be generated. Rejected, and I agree with the
+reason: a generated assertion is the app's translation of the guide checked
+against the app's implementation of the guide, which grades nothing. A
+hand-written case per row, with coverage enforced, keeps a human in the one
+place that needs one.</li>
+<li>The tab-order case is the one I would keep if I could keep only one: two
+members in the tab sequence is a bug no screenshot shows and every keyboard
+reader hits immediately.</li>
+</ul>
+</section>
+
+<section data-kind="review" id="review-platform-advisor">
+<h3>platform advisor — across the seams</h3>
+<p class="verdict">Advisory. No gate.</p>
+<ul>
+<li>The headline: <strong>six APG patterns, no application code</strong>. Not a
+handler, not a fold, not a renderer. Machines, forms, projections and
+<code>data-key</code> carried all of it. That is the interaction tier's
+strongest result in this tree, and it is worth measuring against what the same
+six patterns cost in a component library.</li>
+<li>The finding: <strong>the projection cannot name a set's ends, so no
+row-backed widget can wrap.</strong> <a href="#decision-04">decision-04</a> has
+the argument. It is not an oversight — the doc that added <code>next</code> and
+<code>prev</code> declined wrapping on purpose, because APG makes it differently
+per pattern — but the consequence is now measured: two of the six patterns here
+are specified to wrap and neither can. A <code>first</code>/<code>last</code>
+clause pair would close it and would be a fact about the set, exactly as
+<code>count</code> already is.</li>
+<li>Second finding, smaller: this app wanted three independent booleans in one
+list and had to nest a singleton region per row to get three machines. That
+works and it is not obvious; it is the sort of thing that belongs in the
+terminal's published guidance rather than being rediscovered per app.</li>
+<li>Nothing was worked around. Every check is declared in the program and lands
+at a verb; no script a reader would have to know to run.</li>
+</ul>
+</section>
+
+</body>
+</html>

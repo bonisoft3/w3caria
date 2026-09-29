@@ -1,0 +1,12 @@
+@import url("shared/sheet.css");
+
+[data-screen="contract"] {
+  display: grid;
+  gap: var(--sp-sm);
+  padding: var(--sp-md);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+[data-screen="contract"] .back { margin: 0; font-size: var(--type-body-small); }
+[data-screen="contract"] .back a { color: var(--secondary); text-decoration: none; }

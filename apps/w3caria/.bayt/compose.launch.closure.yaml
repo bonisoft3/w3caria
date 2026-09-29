@@ -1,0 +1,12 @@
+# generated from bayt.cue — do not edit
+include:
+- path: ../../../apps/w3caria/.bayt/compose.launch.yaml
+  required: false
+- path: ../../../apps/w3caria/.bayt/compose.caddy.yaml
+  required: false
+services:
+  bayt:
+    extends:
+      file: ./compose.launch.yaml
+      service: apps_w3caria-launch
+    scale: 1
